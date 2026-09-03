@@ -9,7 +9,10 @@ version = "0.1.0"
 preview = ["pixi-build"]
 
 [tasks]
-run = { cmd = "mkdir -p build && mojo build src/main.mojo -o build/main && ./build/main" }
+# The post's listing, with the origin kept (src/origins.mojo) …
+run = { cmd = "mkdir -p build && mojo build src/origins.mojo -o build/origins && ./build/origins" }
+# … and exactly as the post prints it (src/post.mojo).
+run-post = { cmd = "mkdir -p build && mojo build src/post.mojo -o build/post && ./build/post" }
 fmt = { cmd = "mojo format src" }
 
 [dependencies]

@@ -31,3 +31,8 @@ jobs:
           grep -q 'sum: 499500' origins.txt
           pixi run run-post | tee post.txt
           grep -q 'sum: 499500' post.txt
+
+      # Deliberate misuse: four cases the compiler must reject, three it must
+      # still accept (and get wrong in the documented way).
+      - name: Caught and uncaught
+        run: pixi run check

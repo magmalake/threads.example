@@ -65,13 +65,13 @@ def share[
 
 def run[
     T: AnyType, origin: MutOrigin, //, work: WorkFn
-](n_tasks: Int, ctx: Ctx[T, origin]) raises:
+](n_tasks: Int, ctx: Ctx[T, origin], num_workers: Int = 0) raises:
     """`parallel_for`, taking the tracked context rather than the pointer.
 
     `ctx` is alive for the whole call, so the state it points to is too. The
     erasure to `void *` happens here and nowhere else.
     """
-    parallel_for[work](n_tasks, ctx.opaque())
+    parallel_for[work](n_tasks, ctx.opaque(), num_workers)
 
 
 @fieldwise_init

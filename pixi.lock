@@ -69,7 +69,7 @@ environments:
       - conda: https://conda.modular.com/max-nightly/linux-64/mojo-compiler-1.0.0-release.conda
       - conda: https://conda.modular.com/max-nightly/noarch/mblack-26.5.0-release.conda
       - conda: https://conda.modular.com/max-nightly/noarch/mojo-python-1.0.0-release.conda
-      - conda_source: threads-mojo[031f6a35] @ git+https://github.com/magmalake/threads.mojo?rev=afa64b0e9ebf7f5dc2079f98b3d0e49dcd7bb6ab#afa64b0e9ebf7f5dc2079f98b3d0e49dcd7bb6ab
+      - conda_source: threads-mojo[1ee782b4] @ git+https://github.com/magmalake/threads.mojo?rev=1133606d6de0f48039e7ba2b427575b39b0d2010#1133606d6de0f48039e7ba2b427575b39b0d2010
       osx-arm64:
       - conda: https://conda.anaconda.org/conda-forge/noarch/_python_abi3_support-1.0-hd8ed1ab_3.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/ca-certificates-2026.7.22-hbd8a1cb_0.conda
@@ -116,7 +116,7 @@ environments:
       - conda: https://conda.modular.com/max-nightly/noarch/mojo-python-1.0.0-release.conda
       - conda: https://conda.modular.com/max-nightly/osx-arm64/mojo-1.0.0-release.conda
       - conda: https://conda.modular.com/max-nightly/osx-arm64/mojo-compiler-1.0.0-release.conda
-      - conda_source: threads-mojo[c57d0128] @ git+https://github.com/magmalake/threads.mojo?rev=afa64b0e9ebf7f5dc2079f98b3d0e49dcd7bb6ab#afa64b0e9ebf7f5dc2079f98b3d0e49dcd7bb6ab
+      - conda_source: threads-mojo[ab5a0344] @ git+https://github.com/magmalake/threads.mojo?rev=1133606d6de0f48039e7ba2b427575b39b0d2010#1133606d6de0f48039e7ba2b427575b39b0d2010
 packages:
 - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-20_gnu.conda
   build_number: 20
@@ -1100,8 +1100,8 @@ packages:
   run_exports: {}
   size: 61221085
   timestamp: 1786294690001
-- conda_source: threads-mojo[031f6a35] @ git+https://github.com/magmalake/threads.mojo?rev=afa64b0e9ebf7f5dc2079f98b3d0e49dcd7bb6ab#afa64b0e9ebf7f5dc2079f98b3d0e49dcd7bb6ab
-  version: 0.2.2
+- conda_source: threads-mojo[1ee782b4] @ git+https://github.com/magmalake/threads.mojo?rev=1133606d6de0f48039e7ba2b427575b39b0d2010#1133606d6de0f48039e7ba2b427575b39b0d2010
+  version: 0.3.0
   build: hb0f4dca_0
   subdir: linux-64
   variants:
@@ -1162,8 +1162,8 @@ packages:
   - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2026c-h151e31d_0.conda
   - conda: https://conda.modular.com/max-nightly/linux-64/mojo-compiler-1.0.0-release.conda
   - conda: https://conda.modular.com/max-nightly/noarch/mojo-python-1.0.0-release.conda
-- conda_source: threads-mojo[c57d0128] @ git+https://github.com/magmalake/threads.mojo?rev=afa64b0e9ebf7f5dc2079f98b3d0e49dcd7bb6ab#afa64b0e9ebf7f5dc2079f98b3d0e49dcd7bb6ab
-  version: 0.2.2
+- conda_source: threads-mojo[ab5a0344] @ git+https://github.com/magmalake/threads.mojo?rev=1133606d6de0f48039e7ba2b427575b39b0d2010#1133606d6de0f48039e7ba2b427575b39b0d2010
+  version: 0.3.0
   build: h60d57d3_0
   subdir: osx-arm64
   variants:

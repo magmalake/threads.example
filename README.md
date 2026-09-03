@@ -10,12 +10,14 @@ Two files, one program:
 - [`src/post.mojo`](src/post.mojo) — the post's whole program, plus the
   twenty-line `Ctx[T]` it relies on, exactly as published.
 - [`src/origins.mojo`](src/origins.mojo) — the same program with the origin
-  of `totals` kept in the context type instead of erased. `share(totals)`
-  captures it, `run[task](n, ctx)` holds it across the `parallel_for`, and the
-  compiler extends the lifetime of `totals` to cover the call. Sharing an
-  immutable argument, a temporary, or letting a `Ctx` outlive its state is a
-  compile error. The erasure to `void *` still happens — once, inside `run` —
-  because that is all a pthread can carry.
+  of `totals` kept instead of erased: `parallel_for[task](1000, totals)`
+  takes the state by `ref` and the task as `def(Int, mut Totals)`. An
+  argument is alive for the whole call, so the compiler extends the lifetime
+  of `totals` to cover the joins; a `read` argument or a temporary is a
+  compile error. The erasure to `void *` still happens — once, inside
+  threads.mojo — because that is all a pthread can carry. An earlier version
+  of this file did the same in user code with a `Ctx[T, origin]`, `share` and
+  `run`; threads-mojo 0.3.0 moved that into `parallel_for` itself.
 
 Both sum `0..1000` from every core through one shared atomic and print
 
@@ -53,7 +55,7 @@ which wrote the `threads-mojo = { git = …, rev = … }` line in
 
 ## What the compiler catches, and what it does not
 
-`pixi run check` builds eight deliberately wrong programs under
+`pixi run check` builds six deliberately wrong programs under
 [`tests/`](tests/) and holds the compiler to a claim about each one.
 
 [`tests/caught/`](tests/caught/) must fail to compile, with the diagnostic the
@@ -61,10 +63,8 @@ file names:
 
 | file | misuse | diagnostic |
 | --- | --- | --- |
-| `share_immutable` | `share(x)` on a `read` argument | `cannot be converted from 'Totals' to ref 'Totals'` |
-| `share_temporary` | `share(Totals(0))` | same |
-| `return_ctx_to_local` | `return share(local)` | `cannot implicitly convert 'Ctx[Totals, origin_of(t)]' value to 'Ctx[Totals]'` |
-| `ctx_outlives_block` | a `Ctx` assigned in a block, used after it | same |
+| `state_immutable` | `parallel_for[task](n, x)` with `x` a `read` argument | `cannot be converted from 'Totals' to ref 'Totals'` |
+| `state_temporary` | `parallel_for[task](n, Totals(0))` | same |
 
 [`tests/uncaught/`](tests/uncaught/) must compile with no diagnostic at all,
 and then print the wrong answer the file predicts:
@@ -72,7 +72,7 @@ and then print the wrong answer the file predicts:
 | file | what goes wrong | output |
 | --- | --- | --- |
 | `untracked_ctx_drops_early` | the post's `Ctx` erases the origin; `totals` is destroyed at its last visible use, before any thread starts | `Totals dropped` printed first; sum `499499` (−1 + 499500, the tasks adding into the poisoned cell) |
-| `opaque_escapes_origin` | `share(totals).opaque()` outside `run` — the boundary of what origins cover | same |
+| `opaque_escapes_origin` | the opaque `parallel_for` on `opaque_ptr(Int(Pointer(to=totals)))` — `Int(…)` is where the origin stops, and the boundary of what the typed form covers | same |
 | `field_deref_after_last_use` | `totals.cell[]` copies the pointer field, which is the struct's last use, and the deref reads a destroyed object | `-1`; the method read `totals.sum()` gives `499500`, and so does the same field deref once the cell is an `OwnedPointer`, whose deref borrows the struct |
 | `plain_store_races` | a task writes `sum` with a plain load and store instead of the atomic — every task holds `mut` access to the same value and nothing says the type is safe to share | lost updates, every run; not a lifetime bug but the one an origin cannot express |
 
@@ -83,11 +83,12 @@ those tests poisons the cell rather than freeing it, so the misuse stays a
 number that can be asserted instead of undefined behaviour.
 
 Three of the four are lifetime bugs, and each has a fix that exists today:
-keep the origin in the type (`origins.mojo`), keep the erasure inside `run`,
-and own heap memory through a type whose deref borrows the owner
-(`OwnedPointer`, `List`) rather than a raw untracked `Pointer`. The fourth is
-a different kind: `Ctx` gives a thousand tasks mutable access to one value,
-and only an atomic in the task keeps that honest. Rust would refuse the
+pass the state as a `ref` argument (the typed `parallel_for`), keep the
+erasure inside the library, and own heap memory through a type whose deref
+borrows the owner (`OwnedPointer`, `List`) rather than a raw untracked
+`Pointer`. The fourth is a different kind: `parallel_for` gives a thousand
+tasks `mut` access to one value, and only an atomic in the task keeps that
+honest. Rust would refuse the
 aliased `&mut` and let the atomic through on the strength of `Sync`; Mojo has
 no such trait yet, so the race is invisible to the compiler and lands in the
 uncaught set with the others.

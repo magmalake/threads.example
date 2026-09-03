@@ -32,7 +32,7 @@ jobs:
           pixi run run-post | tee post.txt
           grep -q 'sum: 499500' post.txt
 
-      # Deliberate misuse: four cases the compiler must reject, four it must
+      # Deliberate misuse: two cases the compiler must reject, four it must
       # still accept (and get wrong in the documented way).
       - name: Caught and uncaught
         run: pixi run check

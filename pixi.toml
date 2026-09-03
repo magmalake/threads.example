@@ -16,9 +16,23 @@ run-post = { cmd = "mkdir -p build && mojo build src/post.mojo -o build/post && 
 # Deliberate misuse: what the compiler rejects, and what it lets through.
 check = { cmd = "bash tests/check.sh" }
 fmt = { cmd = "mojo format src tests" }
+# mojolint (lint-mojo, below): the origin and threading mistakes the compiler
+# lets through, with mojo-lsp-server behind the rules. Exit 1 on findings.
+# Only src/origins.mojo — the post's corrected listing — is linted here.
+# src/post.mojo and tests/uncaught/*.mojo are deliberate positives (see
+# tests/lint_uncaught.sh); tests/caught/*.mojo are deliberately rejected by
+# the compiler and never reach mojolint at all.
+lint = { cmd = "mojolint --lsp -I src src/origins.mojo" }
+# The other half of the claim: mojolint must flag every file in
+# tests/uncaught/. See tests/lint_uncaught.sh for what "flag" means here.
+lint-uncaught = { cmd = "bash tests/lint_uncaught.sh" }
 
 [dependencies]
 mojo = "==1.0.0"
 # Added by `pixi shelf add threads-mojo`: the tin comes from GitHub as a pixi
 # source dependency, pinned at the revision mojoshelf published.
 threads-mojo = { git = "https://github.com/magmalake/threads.mojo.git", rev = "1133606d6de0f48039e7ba2b427575b39b0d2010" }
+# Added by `pixi shelf add lint-mojo`: the linter comes from GitHub as a pixi
+# source dependency pinned at the revision mojoshelf published, and builds
+# the `mojolint` executable into every environment next to mojo-lsp-server.
+lint-mojo = { git = "https://github.com/magmalake/lint.mojo.git", rev = "2a12807b7847984aff2c8bf148b0eb7515a99844" }

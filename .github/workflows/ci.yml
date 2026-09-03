@@ -36,3 +36,10 @@ jobs:
       # still accept (and get wrong in the documented way).
       - name: Caught and uncaught
         run: pixi run check
+
+      # mojolint must be silent on the post's corrected listing, and must
+      # flag every case in tests/uncaught/ — the flip side of the step above.
+      - name: Lint (mojolint --lsp)
+        run: |
+          pixi run lint
+          pixi run lint-uncaught

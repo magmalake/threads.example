@@ -53,7 +53,7 @@ which wrote the `threads-mojo = { git = …, rev = … }` line in
 
 ## What the compiler catches, and what it does not
 
-`pixi run check` builds seven deliberately wrong programs under
+`pixi run check` builds eight deliberately wrong programs under
 [`tests/`](tests/) and holds the compiler to a claim about each one.
 
 [`tests/caught/`](tests/caught/) must fail to compile, with the diagnostic the
@@ -73,13 +73,24 @@ and then print the wrong answer the file predicts:
 | --- | --- | --- |
 | `untracked_ctx_drops_early` | the post's `Ctx` erases the origin; `totals` is destroyed at its last visible use, before any thread starts | `Totals dropped` printed first; sum `499499` (−1 + 499500, the tasks adding into the poisoned cell) |
 | `opaque_escapes_origin` | `share(totals).opaque()` outside `run` — the boundary of what origins cover | same |
-| `field_deref_after_last_use` | `totals.cell[]` copies the pointer field, which is the struct's last use, and the deref reads a destroyed object | `-1`; the method read `totals.sum()` gives `499500` |
+| `field_deref_after_last_use` | `totals.cell[]` copies the pointer field, which is the struct's last use, and the deref reads a destroyed object | `-1`; the method read `totals.sum()` gives `499500`, and so does the same field deref once the cell is an `OwnedPointer`, whose deref borrows the struct |
+| `plain_store_races` | a task writes `sum` with a plain load and store instead of the atomic — every task holds `mut` access to the same value and nothing says the type is safe to share | lost updates, every run; not a lifetime bug but the one an origin cannot express |
 
 The uncaught set is the list a reviewer has to check by hand. If a newer
 compiler starts rejecting one, `check` fails on it — move the file to
 `caught/`, record the diagnostic, and the list gets shorter. The destructor in
 those tests poisons the cell rather than freeing it, so the misuse stays a
 number that can be asserted instead of undefined behaviour.
+
+Three of the four are lifetime bugs, and each has a fix that exists today:
+keep the origin in the type (`origins.mojo`), keep the erasure inside `run`,
+and own heap memory through a type whose deref borrows the owner
+(`OwnedPointer`, `List`) rather than a raw untracked `Pointer`. The fourth is
+a different kind: `Ctx` gives a thousand tasks mutable access to one value,
+and only an atomic in the task keeps that honest. Rust would refuse the
+aliased `&mut` and let the atomic through on the strength of `Sync`; Mojo has
+no such trait yet, so the race is invisible to the compiler and lands in the
+uncaught set with the others.
 
 ## Comments
 

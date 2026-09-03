@@ -13,7 +13,9 @@ preview = ["pixi-build"]
 run = { cmd = "mkdir -p build && mojo build src/origins.mojo -o build/origins && ./build/origins" }
 # … and exactly as the post prints it (src/post.mojo).
 run-post = { cmd = "mkdir -p build && mojo build src/post.mojo -o build/post && ./build/post" }
-fmt = { cmd = "mojo format src" }
+# Deliberate misuse: what the compiler rejects, and what it lets through.
+check = { cmd = "bash tests/check.sh" }
+fmt = { cmd = "mojo format src tests" }
 
 [dependencies]
 mojo = "==1.0.0"

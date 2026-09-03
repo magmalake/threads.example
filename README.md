@@ -51,6 +51,36 @@ which wrote the `threads-mojo = { git = …, rev = … }` line in
 [`pixi.toml`](pixi.toml). magmalake tins are not on a conda channel, so
 `pixi add threads-mojo` would find nothing.
 
+## What the compiler catches, and what it does not
+
+`pixi run check` builds seven deliberately wrong programs under
+[`tests/`](tests/) and holds the compiler to a claim about each one.
+
+[`tests/caught/`](tests/caught/) must fail to compile, with the diagnostic the
+file names:
+
+| file | misuse | diagnostic |
+| --- | --- | --- |
+| `share_immutable` | `share(x)` on a `read` argument | `cannot be converted from 'Totals' to ref 'Totals'` |
+| `share_temporary` | `share(Totals(0))` | same |
+| `return_ctx_to_local` | `return share(local)` | `cannot implicitly convert 'Ctx[Totals, origin_of(t)]' value to 'Ctx[Totals]'` |
+| `ctx_outlives_block` | a `Ctx` assigned in a block, used after it | same |
+
+[`tests/uncaught/`](tests/uncaught/) must compile with no diagnostic at all,
+and then print the wrong answer the file predicts:
+
+| file | what goes wrong | output |
+| --- | --- | --- |
+| `untracked_ctx_drops_early` | the post's `Ctx` erases the origin; `totals` is destroyed at its last visible use, before any thread starts | `Totals dropped` printed first; sum `499499` (−1 + 499500, the tasks adding into the poisoned cell) |
+| `opaque_escapes_origin` | `share(totals).opaque()` outside `run` — the boundary of what origins cover | same |
+| `field_deref_after_last_use` | `totals.cell[]` copies the pointer field, which is the struct's last use, and the deref reads a destroyed object | `-1`; the method read `totals.sum()` gives `499500` |
+
+The uncaught set is the list a reviewer has to check by hand. If a newer
+compiler starts rejecting one, `check` fails on it — move the file to
+`caught/`, record the diagnostic, and the list gets shorter. The destructor in
+those tests poisons the cell rather than freeing it, so the misuse stays a
+number that can be asserted instead of undefined behaviour.
+
 ## Comments
 
 The post has no comment box; this repo is where the code can be discussed.

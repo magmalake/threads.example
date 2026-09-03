@@ -1,12 +1,14 @@
-# The tracked `Ctx` fixes the drop — until `opaque()` is called outside `run`.
-# The `void *` carries no origin, the temporary `Ctx` dies with the statement,
-# and `totals` goes with it. This is the boundary of what origins can cover.
+# The typed `parallel_for` fixes the drop — the opaque one does not. `Int(…)`
+# turns a pointer whose origin is `totals`'s own into a number, the number
+# into an untracked `OpaquePtr`, and from there the compiler sees no use of
+# `totals`, so it is destroyed on the spot. This is the boundary of what
+# origins can cover: the opaque form is the right tool for a hand-laid-out
+# block of cells, and the wrong one for a local you stop mentioning.
 # expect: Totals dropped
 # expect: before parallel_for
 # expect: after parallel_for: 499499
 from std.memory.alloc import unsafe_alloc
-from origins import Ctx, share
-from threads import AtomicCounter, OpaquePtr, parallel_for
+from threads import AtomicCounter, OpaquePtr, opaque_ptr, parallel_for
 
 
 struct Totals(Movable):
@@ -28,15 +30,18 @@ struct Totals(Movable):
         self.cell[] = -1
 
 
+def at(ptr: OpaquePtr) -> ref[MutUntrackedOrigin] Totals:
+    return Pointer[Totals, MutUntrackedOrigin](unsafe_from_address=Int(ptr))[]
+
+
 def task(i: Int, ptr: OpaquePtr) -> None:
-    var t = Ctx[Totals].of(ptr)
-    _ = AtomicCounter.at(Int(t[].cell)).fetch_add(Int64(i))
+    _ = AtomicCounter.at(Int(at(ptr).cell)).fetch_add(Int64(i))
 
 
 def main() raises:
     var totals = Totals()
-    var ptr = share(totals).opaque()
+    var ptr = opaque_ptr(Int(Pointer(to=totals)))
     print("before parallel_for")
     parallel_for[task](1000, ptr)
     # Not `totals.cell` — a use of `totals` here would move the drop past it.
-    print("after parallel_for:", Ctx[Totals].of(ptr)[].cell[])
+    print("after parallel_for:", at(ptr).cell[])

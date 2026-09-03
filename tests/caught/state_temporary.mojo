@@ -1,9 +1,8 @@
 # A temporary dies at the end of the statement; there is nothing to share.
 # expect-error: cannot be converted from 'Totals' to ref 'Totals'
-from origins import Ctx, Totals, run, share, task
+from origins import Totals, task
+from threads import parallel_for
 
 
 def main() raises:
-    var c = share(Totals(0))
-    run[task](1000, c)
-    print(c[].sum)
+    parallel_for[task](1000, Totals(0))

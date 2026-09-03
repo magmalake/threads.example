@@ -14,8 +14,7 @@
 # expect: Owned dropped
 from std.memory import OwnedPointer
 from std.memory.alloc import unsafe_alloc
-from origins import Ctx, run, share
-from threads import AtomicCounter, OpaquePtr
+from threads import AtomicCounter, parallel_for
 
 
 struct Totals(Movable):
@@ -56,22 +55,20 @@ struct Owned(Movable):
         print("Owned dropped")
 
 
-def task(i: Int, ptr: OpaquePtr) -> None:
-    var t = Ctx[Totals].of(ptr)
-    _ = AtomicCounter.at(Int(t[].cell)).fetch_add(Int64(i))
+def task(i: Int, mut t: Totals) -> None:
+    _ = AtomicCounter.at(Int(t.cell)).fetch_add(Int64(i))
 
 
-def owned_task(i: Int, ptr: OpaquePtr) -> None:
-    var t = Ctx[Owned].of(ptr)
-    _ = AtomicCounter.at(Int(Pointer(to=t[].cell[]))).fetch_add(Int64(i))
+def owned_task(i: Int, mut o: Owned) -> None:
+    _ = AtomicCounter.at(Int(Pointer(to=o.cell[]))).fetch_add(Int64(i))
 
 
 def main() raises:
     var totals = Totals()
-    run[task](1000, share(totals))
+    parallel_for[task](1000, totals)
     print("via method:", totals.sum())
     print("via field deref:", totals.cell[])
 
     var owned = Owned()
-    run[owned_task](1000, share(owned))
+    parallel_for[owned_task](1000, owned)
     print("via OwnedPointer field deref:", owned.cell[])

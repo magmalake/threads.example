@@ -23,9 +23,11 @@ jobs:
           # rejects an older lock with "lock file not up-to-date".
           pixi-version: v0.78.0
 
-      # The same command a reader runs after cloning. Asserts the answer the
-      # post quotes, not just that the build succeeds.
-      - name: Build and run
+      # The same commands a reader runs after cloning. Asserts the answer the
+      # post quotes, not just that the builds succeed.
+      - name: Build and run both programs
         run: |
-          pixi run run | tee out.txt
-          grep -q 'sum: 499500' out.txt
+          pixi run run | tee origins.txt
+          grep -q 'sum: 499500' origins.txt
+          pixi run run-post | tee post.txt
+          grep -q 'sum: 499500' post.txt

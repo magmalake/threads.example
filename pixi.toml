@@ -1,0 +1,19 @@
+[workspace]
+authors = ["Marius S <39998+winding-lines@users.noreply.github.com>"]
+channels = ["https://conda.modular.com/max-nightly", "conda-forge"]
+name = "threads.example"
+description = "Companion code for the magmalake post on writing multithreaded code in Mojo 1.0 — one file, built against threads-mojo from mojoshelf."
+platforms = ["osx-arm64", "linux-64"]
+version = "0.1.0"
+# Required for git source dependencies; `pixi shelf add` says so if it is missing.
+preview = ["pixi-build"]
+
+[tasks]
+run = { cmd = "mkdir -p build && mojo build src/main.mojo -o build/main && ./build/main" }
+fmt = { cmd = "mojo format src" }
+
+[dependencies]
+mojo = "==1.0.0"
+# Added by `pixi shelf add threads-mojo`: the tin comes from GitHub as a pixi
+# source dependency, pinned at the revision mojoshelf published.
+threads-mojo = { git = "https://github.com/magmalake/threads.mojo.git", rev = "d05cbff21e25b817607a33edb2f3c9e8fc696964" }

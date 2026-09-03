@@ -16,4 +16,4 @@ fmt = { cmd = "mojo format src" }
 mojo = "==1.0.0"
 # Added by `pixi shelf add threads-mojo`: the tin comes from GitHub as a pixi
 # source dependency, pinned at the revision mojoshelf published.
-threads-mojo = { git = "https://github.com/magmalake/threads.mojo.git", rev = "d05cbff21e25b817607a33edb2f3c9e8fc696964" }
+threads-mojo = { git = "https://github.com/magmalake/threads.mojo.git", rev = "afa64b0e9ebf7f5dc2079f98b3d0e49dcd7bb6ab" }

@@ -12,6 +12,9 @@
 # expect: via field deref: -1
 # expect: via OwnedPointer field deref: 499500
 # expect: Owned dropped
+# Clean under ThreadSanitizer: this bug is not even concurrent — the drop and
+# the deref both happen on the main thread, after `parallel_for` has joined.
+# expect-tsan: clean
 from std.memory import OwnedPointer
 from std.memory.alloc import unsafe_alloc
 from threads import AtomicCounter, parallel_for

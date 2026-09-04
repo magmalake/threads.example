@@ -11,6 +11,11 @@
 # updates are a certainty rather than a likelihood, and the worker count is
 # fixed so a single-core runner cannot serialise the tasks by accident.
 # expect: plain store, lost updates: True
+# Two threads, a plain load and a plain store, no ordering between them: this
+# is the one case here a race detector can see, and `--sanitize thread` names
+# both accesses inside `_parallel_worker`. The lint (L003) and the sanitizer
+# agree, from opposite ends.
+# expect-tsan: race
 from std.time import perf_counter_ns
 from threads import parallel_for
 

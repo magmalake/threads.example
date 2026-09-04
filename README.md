@@ -56,7 +56,9 @@ which wrote the `threads-mojo = { git = …, rev = … }` line in
 ## What the compiler catches, and what it does not
 
 `pixi run check` builds six deliberately wrong programs under
-[`tests/`](tests/) and holds the compiler to a claim about each one.
+[`tests/`](tests/) and holds the compiler to a claim about each one — and then
+asks a second question of the four that compile: what does a race detector
+make of them?
 
 [`tests/caught/`](tests/caught/) must fail to compile, with the diagnostic the
 file names:
@@ -81,6 +83,41 @@ compiler starts rejecting one, `check` fails on it — move the file to
 `caught/`, record the diagnostic, and the list gets shorter. The destructor in
 those tests poisons the cell rather than freeing it, so the misuse stays a
 number that can be asserted instead of undefined behaviour.
+
+### And what a sanitizer catches
+
+`check` rebuilds each uncaught case with `mojo build --sanitize thread` and
+holds ThreadSanitizer to the verdict the file declares in a
+`# expect-tsan: race` or `# expect-tsan: clean` line, next to its `# expect:`
+lines. [`src/origins.mojo`](src/origins.mojo) — the corrected listing — carries
+the same marker and is the control: a "clean" verdict is only worth reading if
+a correct program earns one too.
+
+| file | ThreadSanitizer |
+| --- | --- |
+| `origins` (the control) | clean |
+| `untracked_ctx_drops_early` | clean |
+| `opaque_escapes_origin` | clean |
+| `field_deref_after_last_use` | clean |
+| `plain_store_races` | **data race**, both accesses named |
+
+The three clean verdicts are the finding, not a gap in the harness. Each of
+those bugs poisons its cell from the **main** thread — before `pthread_create`
+in two cases, after the join in the third — so every access to it is ordered
+and there is no race to see. A use-after-destroy is not a data race, and a
+race detector is the wrong instrument for one; `L001` and `L002` stay the
+things that catch them.
+
+`plain_store_races` is the one that is genuinely concurrent, and it is now
+caught twice over: statically by `L003`, and at runtime by a tool that names
+the load and the store in `_parallel_worker` and the two threads they ran on.
+
+The leg runs where the sanitizer does. On linux-64 with Mojo 1.0.0 a
+`--sanitize thread` binary links and then aborts before `main` — the runtime's
+bundled TCMalloc cannot get a 1 GiB-aligned mapping inside the address space
+TSan reserved — so a canary decides and `check` prints a skip line rather than
+failing. `CHECK_TSAN=1` forces it (to find out whether a newer toolchain has
+fixed it); `CHECK_TSAN=0` skips it.
 
 Three of the four are lifetime bugs, and each has a fix that exists today:
 pass the state as a `ref` argument (the typed `parallel_for`), keep the

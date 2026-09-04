@@ -33,7 +33,16 @@ jobs:
           grep -q 'sum: 499500' post.txt
 
       # Deliberate misuse: two cases the compiler must reject, four it must
-      # still accept (and get wrong in the documented way).
+      # still accept (and get wrong in the documented way) — and then each of
+      # those four, plus the corrected listing, rebuilt under
+      # `--sanitize thread` and checked against the `# expect-tsan:` line in
+      # the file.
+      #
+      # The sanitizer leg runs on macOS and skips itself on Linux: with Mojo
+      # 1.0.0 a `--sanitize thread` binary links on linux-64 and then aborts
+      # before `main`, because the runtime's bundled TCMalloc cannot get a
+      # 1 GiB-aligned mapping inside the address space TSan has reserved. A
+      # canary inside check.sh decides, so this stays one command on both.
       - name: Caught and uncaught
         run: pixi run check
 

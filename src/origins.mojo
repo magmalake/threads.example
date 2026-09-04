@@ -24,6 +24,12 @@ itself, which is why the program below is the post's listing minus the
 pointer plumbing.
 """
 
+# The control for the sanitizer leg of `tests/check.sh`: this program is
+# correct, so ThreadSanitizer must have nothing to say about it. A "clean"
+# verdict on the uncaught cases is only worth reading if a correct program
+# earns one too — that is what rules out a sanitizer that is silently off.
+# expect-tsan: clean
+
 from threads import AtomicCounter, num_cpus, parallel_for
 
 

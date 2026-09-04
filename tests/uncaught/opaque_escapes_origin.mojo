@@ -7,6 +7,10 @@
 # expect: Totals dropped
 # expect: before parallel_for
 # expect: after parallel_for: 499499
+# Clean under ThreadSanitizer, for the same reason as
+# `untracked_ctx_drops_early`: `totals` is destroyed on the main thread before
+# the first task starts, so every access to the poisoned cell is ordered.
+# expect-tsan: clean
 from std.memory.alloc import unsafe_alloc
 from threads import AtomicCounter, OpaquePtr, opaque_ptr, parallel_for
 

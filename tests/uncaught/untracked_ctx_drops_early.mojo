@@ -5,6 +5,12 @@
 # expect: Totals dropped
 # expect: before parallel_for
 # expect: after parallel_for: 499499
+# Clean under ThreadSanitizer, and that is the point rather than a gap: the
+# poisoning write happens on the main thread *before* `pthread_create`, so it
+# is ordered against every task's read of the cell and there is no race to
+# report. A use-after-destroy is not a race; mojolint's L001 is what catches
+# this one.
+# expect-tsan: clean
 from std.memory.alloc import unsafe_alloc
 from threads import AtomicCounter, OpaquePtr, parallel_for
 

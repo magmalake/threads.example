@@ -52,3 +52,11 @@ jobs:
         run: |
           pixi run lint
           pixi run lint-uncaught
+
+  # Imports: no cycles between modules, and each name imported from the
+  # module that defines it (github.com/ouromo/customs).
+  customs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ouromo/customs@v0.2.0

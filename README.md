@@ -1,6 +1,6 @@
 # threads.example
 
-[![CI](https://github.com/magmalake/threads.example/actions/workflows/ci.yml/badge.svg)](https://github.com/magmalake/threads.example/actions/workflows/ci.yml)
+[![CI](https://github.com/magmalake/threads.example/actions/workflows/ci.yml/badge.svg)](https://github.com/magmalake/threads.example/actions/workflows/ci.yml) [![Mojo version](https://mojourney.dev/badge/magmalake/threads.example/mojo.svg)](https://mojourney.dev/repos/magmalake/threads.example)
 
 Companion code for [**Writing ergonomic multithreaded code in Mojo 1.0**](https://magmalake.org/blog/writing-multithreaded-code-in-mojo/)
 on [magmalake.org](https://magmalake.org).
